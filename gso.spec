@@ -2,9 +2,8 @@
 
 from PyInstaller.utils.hooks import collect_all
 
-# 时区查找需要带上 timezonefinder 的二进制时区多边形数据
-# 以及 Windows 下 zoneinfo 需要 tzdata 包
-tzf_datas, tzf_binaries, tzf_hiddenimports = collect_all('timezonefinder')
+# tzfpy 是 Rust 扩展，自带时区数据；tzdata 是 Windows 上 zoneinfo 需要的
+tzf_datas, tzf_binaries, tzf_hiddenimports = collect_all('tzfpy')
 tzd_datas, tzd_binaries, tzd_hiddenimports = collect_all('tzdata')
 
 a = Analysis(
@@ -23,7 +22,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['tkinter', 'matplotlib', 'pandas', 'PIL'],
+    excludes=['tkinter', 'matplotlib', 'numpy', 'pandas', 'PIL'],
     noarchive=False,
     optimize=0,
 )

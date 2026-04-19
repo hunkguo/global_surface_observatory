@@ -1,6 +1,6 @@
 """时区解析与本地时间格式化。
 
-用 timezonefinder 离线把 (lat, lon) 解到 IANA tz 名称，
+用 tzfpy 离线把 (lat, lon) 解到 IANA tz 名称，
 然后用 stdlib zoneinfo 计算本地时间（含 DST）。
 """
 from __future__ import annotations
@@ -9,18 +9,17 @@ from datetime import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 try:
-    from timezonefinder import TimezoneFinder
-    _tf: TimezoneFinder | None = TimezoneFinder()
+    from tzfpy import get_tz as _get_tz
 except Exception:
-    _tf = None
+    _get_tz = None
 
 
 def tz_of(lat: float | None, lon: float | None) -> str | None:
     """(lat, lon) -> IANA 时区名。失败返回 None。"""
-    if _tf is None or lat is None or lon is None:
+    if _get_tz is None or lat is None or lon is None:
         return None
     try:
-        return _tf.timezone_at(lng=lon, lat=lat)
+        return _get_tz(lon, lat)  # tzfpy: (lng, lat) 顺序
     except Exception:
         return None
 

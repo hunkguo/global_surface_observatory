@@ -1,4 +1,4 @@
 requests>=2.32.0
 python-dotenv>=1.0.1
-timezonefinder>=6.0
+tzfpy>=0.15
 tzdata; sys_platform == "win32"
