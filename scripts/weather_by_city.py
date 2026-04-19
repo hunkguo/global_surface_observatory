@@ -17,6 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from data_sources.geocode_client import geocode
+from parsers.time_utils import fmt_local, fmt_local_short, tz_of
 from parsers.units import fmt_temp_cf
 from storage.sqlite_repo import DEFAULT_DB_PATH, connection
 
@@ -102,30 +103,41 @@ def _print_city_block(
     conn: sqlite3.Connection,
     radius_km: float,
 ) -> None:
+    tz_name = tz_of(lat, lon)
     print(f"=== {label} ===")
     print(f"  Location : {loc_display}")
     print(f"  Coords   : ({lat:.4f}, {lon:.4f})")
     print(f"  Window   : {since_iso}  ->  {now_iso}  (last {hours}h, UTC)")
+    if tz_name:
+        print(
+            f"  Local    : {fmt_local(since_iso, tz_name)}  ->  "
+            f"{fmt_local(now_iso, tz_name)}  ({tz_name})"
+        )
     print()
     if not rows:
         print(f"  (no airports within {radius_km:.0f}km — run `gso fetch-airports` to load globally)")
         print()
         return
+    tz_label = (tz_name.split("/")[-1] if tz_name else "local")
+    latest_col = f"Latest UTC / {tz_label}"
     header = (
-        f"  {'ICAO':<6} {'Name':<32} {'Dist':>8}  "
-        f"{'Tmax (°C / °F)':>16}  {'Tmin (°C / °F)':>16}  {'N':>4}  Latest"
+        f"  {'ICAO':<6} {'Name':<28} {'Dist':>8}  "
+        f"{'Tmax (°C / °F)':>16}  {'Tmin (°C / °F)':>16}  {'N':>4}  {latest_col}"
     )
     print(header)
     print("  " + "-" * (len(header) - 2))
     for dist, a in rows:
         stats = airport_temperature_stats(conn, a["icao"], since_iso)
-        name = (a["name"] or "")[:32]
+        name = (a["name"] or "")[:28]
+        utc_short = _fmt_time_short(stats["last_obs"])
+        local_short = fmt_local_short(stats["last_obs"], tz_name) if tz_name else "-"
+        latest = f"{utc_short} / {local_short}" if stats["last_obs"] else "-"
         print(
-            f"  {a['icao']:<6} {name:<32} "
+            f"  {a['icao']:<6} {name:<28} "
             f"{dist:>6.1f}km  "
             f"{fmt_temp_cf(stats['t_max']):>16}  "
             f"{fmt_temp_cf(stats['t_min']):>16}  "
-            f"{stats['n']:>4}  {_fmt_time_short(stats['last_obs'])}"
+            f"{stats['n']:>4}  {latest}"
         )
     print()
 
