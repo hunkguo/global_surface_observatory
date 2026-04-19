@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual envs
+venv/
+.venv/
+env/
+
+# Local config / secrets
+.env
+.env.local
+
+# SQLite databases
+db/*.db
+db/*.db-journal
+db/*.db-wal
+db/*.db-shm
+
+# Generated weather data
+shared_data/airports.json
+shared_data/aviation_weather_latest.json
+shared_data/aviation_weather_history/**/*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Claude Code local state
+.claude/
+
+# PyInstaller build artifacts
+build/
+dist/
