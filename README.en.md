@@ -155,11 +155,11 @@ gso city Beijing --hours 6                    # last 6h window
   Coords   : (35.6769, 139.7639)
   Window   : 2026-04-18T04:18:25Z  ->  2026-04-19T04:18:25Z  (last 24h, UTC)
 
-  ICAO   Name                                       Dist    Tmax    Tmin     N  Latest
-  ------------------------------------------------------------------------------------
-  RJTI   Tokyo Heliport                            8.2km   23.0   23.0     1  2026-04-19 03:00
-  RJTT   Tokyo Haneda International Airport       14.3km   21.0   21.0     1  2026-04-19 03:00
-  RJTF   Chofu Airport                            21.3km   25.0   25.0     1  2026-04-19 03:00
+  ICAO   Name                                 Dist    Tmax (°C / °F)    Tmin (°C / °F)     N  Latest
+  --------------------------------------------------------------------------------------------------
+  RJTI   Tokyo Heliport                       8.2km   23.0°C /  73.4°F   23.0°C /  73.4°F     1  2026-04-19 03:00
+  RJTT   Tokyo Haneda International Airpo    14.3km   21.0°C /  69.8°F   21.0°C /  69.8°F     1  2026-04-19 03:00
+  RJTF   Chofu Airport                       21.3km   25.0°C /  77.0°F   25.0°C /  77.0°F     1  2026-04-19 03:00
 ```
 
 > ⚠️ `N` is the number of reports inside the window — on day one this is small; after running `poll` for a while, `Tmax` / `Tmin` reflect the real intra-day extremes. `--` means the airport has no METAR in the AWC cache (typical for heliports / military / restricted airports).

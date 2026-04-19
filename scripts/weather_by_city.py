@@ -17,6 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from data_sources.geocode_client import geocode
+from parsers.units import fmt_temp_cf
 from storage.sqlite_repo import DEFAULT_DB_PATH, connection
 
 EARTH_RADIUS_KM = 6371.0
@@ -83,10 +84,6 @@ def airport_temperature_stats(
     }
 
 
-def _fmt_temp(v) -> str:
-    return f"{v:>5.1f}" if v is not None else "   -- "
-
-
 def _fmt_time_short(t: str | None) -> str:
     if not t:
         return "-"
@@ -114,15 +111,20 @@ def _print_city_block(
         print(f"  (no airports within {radius_km:.0f}km — run `gso fetch-airports` to load globally)")
         print()
         return
-    header = f"  {'ICAO':<6} {'Name':<38} {'Dist':>8}  {'Tmax':>6}  {'Tmin':>6}  {'N':>4}  Latest"
+    header = (
+        f"  {'ICAO':<6} {'Name':<32} {'Dist':>8}  "
+        f"{'Tmax (°C / °F)':>16}  {'Tmin (°C / °F)':>16}  {'N':>4}  Latest"
+    )
     print(header)
     print("  " + "-" * (len(header) - 2))
     for dist, a in rows:
         stats = airport_temperature_stats(conn, a["icao"], since_iso)
-        name = (a["name"] or "")[:38]
+        name = (a["name"] or "")[:32]
         print(
-            f"  {a['icao']:<6} {name:<38} "
-            f"{dist:>6.1f}km  {_fmt_temp(stats['t_max'])}  {_fmt_temp(stats['t_min'])}  "
+            f"  {a['icao']:<6} {name:<32} "
+            f"{dist:>6.1f}km  "
+            f"{fmt_temp_cf(stats['t_max']):>16}  "
+            f"{fmt_temp_cf(stats['t_min']):>16}  "
             f"{stats['n']:>4}  {_fmt_time_short(stats['last_obs'])}"
         )
     print()

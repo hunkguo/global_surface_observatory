@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from parsers.units import fmt_temp_cf
 from storage.sqlite_repo import DEFAULT_DB_PATH, connection
 
 
@@ -43,7 +44,7 @@ def main() -> int:
             if m:
                 print(
                     f"  METAR [{m['observation_time']}] {m['metar_type']}  "
-                    f"T={m['temperature_c']}°C  Td={m['dewpoint_c']}°C  "
+                    f"T={fmt_temp_cf(m['temperature_c'])}  Td={fmt_temp_cf(m['dewpoint_c'])}  "
                     f"wind={m['wind_dir']}°/{m['wind_speed']}kt gust={m['gust']}  "
                     f"vis={m['visibility']}  QNH={m['altimeter']}hPa  cat={m['flight_category']}"
                 )

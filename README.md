@@ -155,11 +155,11 @@ gso city Beijing --hours 6                     # 最近 6 小时窗口
   Coords   : (39.9057, 116.3913)
   Window   : 2026-04-18T04:18:25Z  ->  2026-04-19T04:18:25Z  (last 24h, UTC)
 
-  ICAO   Name                                       Dist    Tmax    Tmin     N  Latest
-  ------------------------------------------------------------------------------------
-  ZBBB   Beijing Xijiao Airport                   12.9km     --      --      0  -
-  ZBNY   Beijing Nanyuan Airport                  13.7km     --      --      0  -
-  ZBAA   Beijing Capital International Airport    25.9km   22.0   22.0     1  2026-04-19 03:00
+  ICAO   Name                                 Dist    Tmax (°C / °F)    Tmin (°C / °F)     N  Latest
+  --------------------------------------------------------------------------------------------------
+  ZBBB   Beijing Xijiao Airport              12.9km                --                --     0  -
+  ZBNY   Beijing Nanyuan Airport             13.7km                --                --     0  -
+  ZBAA   Beijing Capital International Air   25.9km   22.0°C /  71.6°F   21.0°C /  69.8°F     3  2026-04-19 03:00
 ```
 
 > ⚠️ N 是窗口内的报文数；运行第一天 N 较小，连续 poll 一段时间后 Tmax/Tmin 才反映真实日内极值。`--`  表示该机场在 AWC 缓存里没有 METAR（多见于直升机场、军用、限制机场）。
