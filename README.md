@@ -19,6 +19,8 @@
   每条记录同时保存 `raw_text`（原报文）、标准化字段（温度 / 露点 / 风 / 能见度 / 气压 / flight_category）以及完整 `raw_json`，后续随时可重算、交叉验证。
 - **API 定点备用路径**  
   同时提供 AWC / AVWX JSON API 客户端，可按 ICAO 清单精确查询单机场，做补漏或专题分析。
+- **按城市查附近机场**  
+  `gso city <city>` 输入任意语言城市名（中/英/日均可），自动地理编码 → 找最近 N 个机场 → 汇总最近 24h 温度极值。
 - **SPECI 自动识别**  
   `metar_reports.metar_type` 区分 METAR 和 SPECI（特选报文）。
 - **单文件 exe 分发**  
@@ -75,6 +77,7 @@ gso <command> [options]
   poll            抓 AWC 缓存并增量写库（主抓路径）
   fetch           按 ICAO 用 API 精确查 METAR/TAF（定点备用）
   show            按 ICAO 打印最新 METAR/TAF
+  city            按城市名查附近机场最近 N 小时温度
 ```
 
 运行 `gso <command> --help` 查看各子命令参数。
@@ -130,6 +133,36 @@ gso fetch-airports                    # 全球（~6 万条）
 gso fetch-airports --country CN       # 仅中国
 gso fetch-airports --limit 100        # 调试用
 ```
+
+### `gso city`
+
+输入城市名（中/英/日等任意语言），自动地理编码 → 找半径内最近的 N 个机场 → 汇总最近 N 小时温度。
+
+```bash
+gso city 北京                                  # 单城市，默认 100km / 24h / top 3
+gso city 北京 Shanghai Tokyo London            # 多城市批量
+gso city 上海 --radius 50 --top 2              # 50km 内取 2 个
+gso city Beijing --hours 6                     # 最近 6 小时窗口
+```
+
+**前置**：先跑 `gso fetch-airports` 灌全球机场；地理编码走 OpenStreetMap Nominatim（免 API key，但限速 1 req/s）。
+
+**示例输出**：
+
+```
+=== 北京 ===
+  Location : Beijing, China
+  Coords   : (39.9057, 116.3913)
+  Window   : 2026-04-18T04:18:25Z  ->  2026-04-19T04:18:25Z  (last 24h, UTC)
+
+  ICAO   Name                                       Dist    Tmax    Tmin     N  Latest
+  ------------------------------------------------------------------------------------
+  ZBBB   Beijing Xijiao Airport                   12.9km     --      --      0  -
+  ZBNY   Beijing Nanyuan Airport                  13.7km     --      --      0  -
+  ZBAA   Beijing Capital International Airport    25.9km   22.0   22.0     1  2026-04-19 03:00
+```
+
+> ⚠️ N 是窗口内的报文数；运行第一天 N 较小，连续 poll 一段时间后 Tmax/Tmin 才反映真实日内极值。`--`  表示该机场在 AWC 缓存里没有 METAR（多见于直升机场、军用、限制机场）。
 
 ---
 
@@ -265,10 +298,11 @@ global_surface_observatory/
 ├── requirements-dev.txt              # 打包期依赖（pyinstaller）
 │
 ├── data_sources/
-│   ├── awc_cache_client.py           # 主路径：CSV/XML + 条件 GET
+│   ├── awc_cache_client.py           # 主路径（CSV/XML + 条件 GET）
 │   ├── awc_client.py                 # 备用：AWC JSON API
 │   ├── avwx_client.py                # 备用：AVWX JSON API
-│   └── airport_codes_client.py       # OurAirports CSV
+│   ├── airport_codes_client.py       # OurAirports CSV
+│   └── geocode_client.py             # Nominatim 地理编码（gso city 用）
 │
 ├── parsers/
 │   ├── metar_parser.py               # API 模式 METAR 解析
@@ -279,7 +313,8 @@ global_surface_observatory/
 │   ├── fetch_airport_codes.py        # gso fetch-airports
 │   ├── poll_aviation_weather.py      # gso poll（主抓）
 │   ├── fetch_aviation_weather.py     # gso fetch（API 备用）
-│   └── show_latest.py                # gso show
+│   ├── show_latest.py                # gso show
+│   └── weather_by_city.py            # gso city
 │
 ├── storage/
 │   ├── sqlite_schema.sql             # 全部建表 DDL

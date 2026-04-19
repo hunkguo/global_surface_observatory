@@ -19,6 +19,8 @@
   Every record stores `raw_text`, standardized columns (temperature, dewpoint, wind, visibility, altimeter, flight_category), and the full `raw_json` — everything can be recomputed or cross-validated later.
 - **API fallback path**  
   AWC / AVWX JSON API clients are available for precise per-ICAO queries — useful for backfilling gaps or focused analysis.
+- **City-based nearby airports lookup**  
+  `gso city <city>` accepts any-language city name (Chinese / English / Japanese / etc.), geocodes it, finds the N nearest airports, and aggregates the last 24h temperature extremes.
 - **SPECI detection**  
   `metar_reports.metar_type` distinguishes routine METARs from SPECI (special observations).
 - **Single-file exe distribution**  
@@ -75,6 +77,7 @@ gso <command> [options]
   poll            Pull AWC cache and write incrementally (primary path)
   fetch           Precise per-ICAO query via JSON API (fallback)
   show            Print latest METAR/TAF for one or more ICAOs
+  city            City name -> nearby airports -> last N hours temperature
 ```
 
 Use `gso <command> --help` to see per-command options.
@@ -130,6 +133,36 @@ gso fetch-airports                    # all airports (~60k)
 gso fetch-airports --country CN       # China only
 gso fetch-airports --limit 100        # debug
 ```
+
+### `gso city`
+
+Accept a city name in any language (Chinese / English / Japanese / etc.), geocode it, find the nearest N airports within the radius, and summarize the last N hours of temperature.
+
+```bash
+gso city Beijing                              # single city, defaults: 100km / 24h / top 3
+gso city Beijing Shanghai Tokyo London        # multiple cities
+gso city Shanghai --radius 50 --top 2         # 50km radius, 2 airports
+gso city Beijing --hours 6                    # last 6h window
+```
+
+**Prerequisite**: run `gso fetch-airports` first to populate the global airports table. Geocoding uses OpenStreetMap Nominatim (no API key, but rate-limited to 1 req/s).
+
+**Sample output**:
+
+```
+=== Tokyo ===
+  Location : Tokyo, Japan
+  Coords   : (35.6769, 139.7639)
+  Window   : 2026-04-18T04:18:25Z  ->  2026-04-19T04:18:25Z  (last 24h, UTC)
+
+  ICAO   Name                                       Dist    Tmax    Tmin     N  Latest
+  ------------------------------------------------------------------------------------
+  RJTI   Tokyo Heliport                            8.2km   23.0   23.0     1  2026-04-19 03:00
+  RJTT   Tokyo Haneda International Airport       14.3km   21.0   21.0     1  2026-04-19 03:00
+  RJTF   Chofu Airport                            21.3km   25.0   25.0     1  2026-04-19 03:00
+```
+
+> ⚠️ `N` is the number of reports inside the window — on day one this is small; after running `poll` for a while, `Tmax` / `Tmin` reflect the real intra-day extremes. `--` means the airport has no METAR in the AWC cache (typical for heliports / military / restricted airports).
 
 ---
 
@@ -268,7 +301,8 @@ global_surface_observatory/
 │   ├── awc_cache_client.py           # primary: CSV/XML + conditional GET
 │   ├── awc_client.py                 # fallback: AWC JSON API
 │   ├── avwx_client.py                # fallback: AVWX JSON API
-│   └── airport_codes_client.py       # OurAirports CSV
+│   ├── airport_codes_client.py       # OurAirports CSV
+│   └── geocode_client.py             # Nominatim geocoding (used by gso city)
 │
 ├── parsers/
 │   ├── metar_parser.py               # METAR parsing (API mode)
@@ -279,7 +313,8 @@ global_surface_observatory/
 │   ├── fetch_airport_codes.py        # gso fetch-airports
 │   ├── poll_aviation_weather.py      # gso poll (primary)
 │   ├── fetch_aviation_weather.py     # gso fetch (API fallback)
-│   └── show_latest.py                # gso show
+│   ├── show_latest.py                # gso show
+│   └── weather_by_city.py            # gso city
 │
 ├── storage/
 │   ├── sqlite_schema.sql             # all-table DDL

@@ -22,6 +22,7 @@ COMMANDS: dict[str, tuple[str, str]] = {
     "poll":           ("scripts.poll_aviation_weather", "抓 AWC 缓存并增量写库（主抓路径）"),
     "fetch":          ("scripts.fetch_aviation_weather","按 ICAO 用 API 精确查 METAR/TAF"),
     "show":           ("scripts.show_latest",           "按 ICAO 打印最新 METAR/TAF"),
+    "city":           ("scripts.weather_by_city",       "按城市名查附近机场最近 N 小时温度"),
 }
 
 
